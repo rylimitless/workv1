@@ -67,12 +67,12 @@
         });
 
        window.charts.chart2 =  new Chart(ctx2, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
                 datasets: [{
-                    label: '# of Votes',
-                    data: [12, 19, 3, 5, 2, 3],
+                    label: 'Pressure',
+                    data: [],
                     borderWidth: 1
                 }]
             },
@@ -130,18 +130,17 @@
         Alpine.data('dropdown', () => ({
             open: true,
             tempdata: [],
+            pressuredata: [],
+            externalTempData: [],
             socket: null,
             socketInitialized: false,
-            payload: {'internal_temperature':0,'external_temperature':0},
+            payload: {'internal_temperature':0,'external_temperature':0 , 'pressure':0 , 'methane':0 , 'ph':0 , 'slurry_level':0},
             
-
-
             init(){
                 if(!this.socketInitialized){
                     this.initWebsockets();
                     this.socketInitialized = true;
                 }
-             
             },
 
             toggle() {
@@ -149,10 +148,18 @@
             },
 
             updateGraphs() {
-               if (window.charts && window.charts.chart1) {
+               if (window.charts && window.charts.chart1 && window.charts.chart2) {
+                
                 let s = [...this.tempdata]
-                window.charts.chart1.data.datasets[0].data = s
+                let y = [...this.externalTempData]
+                console.log(s)
+                window.charts.chart1.data.datasets[0].data = y
+                window.charts.chart1.data.datasets[1].data = s
                 window.charts.chart1.update();
+
+                let tmp = [...this.pressuredata]
+                window.charts.chart2.data.datasets[0].data=tmp;
+                window.charts.chart2.update();
 
                }
             },
@@ -178,15 +185,23 @@
                             ...data
                         };
 
-                        if (self.tempdata.length > 10) {
+                        if (self.tempdata.length > 20) {
                             self.tempdata.shift()
+                        }
+                        if (self.externalTempData.length > 20){
+                            self.externalTempData.shift()
+
+                        }
+                        if (self.pressuredata.length > 20){
+                            self.pressuredata.shift()
 
                         }
 
-                        self.tempdata.push(self.payload.external_temperature)
+                        self.tempdata.push(self.payload.internal_temperature)
+                        self.pressuredata.push(self.payload.pressure)
+                        self.externalTempData.push(self.payload.external_temperature)
 
                         self.updateGraphs()
-                        console.log(JSON.parse(JSON.stringify(self.tempdata)))
 
                     } catch (error) {
                         console.error("Error processing message:", error);
@@ -253,7 +268,7 @@
                   </div>
                   <span class="ml-2 text-xs uppercase text-gray-400">Pressure</span>
                 </div>
-                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-4xl font-semibold text-white" x-text="payload.pressure + ' kPa'"></p>
                 <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
               </div>
               <div class="bg-gray-800 rounded-2xl p-4 w-40">
@@ -264,7 +279,7 @@
                   </div>
                   <span class="ml-2 text-xs uppercase text-gray-400">Methane</span>
                 </div>
-                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-4xl font-semibold text-white" x-text="payload.methane + ' m3'"></p>
                 <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
               </div>
         </div>
@@ -278,7 +293,7 @@
                   </div>
                   <span class="ml-2 text-xs uppercase text-gray-400">PH</span>
                 </div>
-                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-4xl font-semibold text-white" x-text="payload.ph"></p>
                 <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
               </div>
               <div class="bg-gray-800 rounded-2xl p-4 w-40">
@@ -287,9 +302,9 @@
                     <img src="./images/wi-thermometer.svg" alt="wi-thermometer">
                     
                   </div>
-                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Slurry Level</span>
                 </div>
-                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-4xl font-semibold text-white" x-text="payload.slurry_level"></p>
                 <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
               </div>
         </div>

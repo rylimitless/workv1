@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"text/template"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/go-chi/chi/v5"
@@ -76,8 +77,13 @@ func main() {
 	// client.
 
 	r := chi.NewRouter()
-
 	r.Use(middleware.Logger)
+
+	fs := http.FileServer(http.Dir("./templates"))
+	r.Handle("/output.css", fs)
+	r.Handle("/style.css", fs)
+	r.Handle("/images/*", http.StripPrefix("/images/", http.FileServer(http.Dir("./templates/images"))))
+
 	r.Get("/sock", func(w http.ResponseWriter, r *http.Request) {
 		c, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -90,6 +96,21 @@ func main() {
 
 		for {
 		}
+	})
+
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("./templates/index.html")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 	})
 
 	err := http.ListenAndServe(":3000", r)
