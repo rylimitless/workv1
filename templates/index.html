@@ -4,10 +4,123 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="./output.css" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('myChart');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                datasets: [{
+                    label: '# of Votes',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('dropdown', () => ({
+            open: true,
+ 
+            toggle() {
+                this.open = ! this.open
+            }
+        }))
+    })
+</script>
 </head>
 <body>
-    <div class=" bg-gray-900 text-white h-screen w-full;"> 
-        <h1> Hello  World</h1>
+    <div class=" bg-gray-900 text-white h-screen w-full flex" x-data="dropdown"> 
+
+       <div class="flex-auto rounded-lg p-4 m-4" x-show="open"> 
+        <div class="flex gap-10 pb-10 "> 
+            <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2 gap">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+              <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+        </div>
+
+        <div class="flex gap-10 pb-10"> 
+            <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+              <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+        </div>
+
+        <div class="flex gap-10"> 
+            <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+              <div class="bg-gray-800 rounded-2xl p-4 w-40">
+                <div class="flex items-center mb-2">
+                  <div class="bg-700 rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    °
+                  </div>
+                  <span class="ml-2 text-xs uppercase text-gray-400">Temperature</span>
+                </div>
+                <p class="text-4xl font-semibold text-white">30°</p>
+                <p class="text-xs text-gray-300 mt-2">Humidity is making it feel warmer.</p>
+              </div>
+        </div>
+
+       </div>
+       <div class="flex-auto bg-gray-800 rounded-lg p-4 m-4"> 
+        <div>
+            <canvas class="w-20 h-20" id="myChart"></canvas>
+          </div>
+       </div>
     </div>
 </body>
 </html>
