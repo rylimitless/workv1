@@ -169,7 +169,7 @@
             initWebsockets() {
                 const self = this
 
-                this.socket = new WebSocket("ws://localhost:3017/sock")
+                this.socket = new WebSocket("ws://http://24.199.114.198:3017/sock")
                 this.socket.onopen = function (e) {
                     console.log("WebSocket connection established");
                     // Use the saved reference to send data

@@ -80,7 +80,7 @@ func main() {
 
 	client := mqtt.NewClient(ops)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatal(token)
+		panic(token.Error())
 	}
 
 	Subscribe(client)
