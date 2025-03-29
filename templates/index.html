@@ -18,20 +18,19 @@
            window.charts.chart1 = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [1, 2, 3, 4, 5, 6, 7],
+                    labels: [],
                     datasets: [{
                         label: 'Internal Temperature',
                         data: [],
-                        fill: false,
                         borderColor: 'rgb(255, 0, 192)',
-                        tension: 0.1
+                        borderWidth: 1,
                     },
                     {
                         label: 'External Temperature',
                         data: [],
-                        fill: false,
                         borderColor: 'rgb(192, 180, 192)',
-                        tension: 0.1
+                        borderWidth: 1,
+
                     }
                 
                 ]
@@ -132,6 +131,7 @@
             tempdata: [],
             pressuredata: [],
             externalTempData: [],
+            labal1:[],
             socket: null,
             socketInitialized: false,
             payload: {'internal_temperature':0,'external_temperature':0 , 'pressure':0 , 'methane':0 , 'ph':0 , 'slurry_level':0},
@@ -152,8 +152,10 @@
                 
                 let s = [...this.tempdata]
                 let y = [...this.externalTempData]
-                console.log(s)
-                window.charts.chart1.data.datasets[0].data = y
+                let label = [...this.labal1]
+                
+                window.charts.chart1.data.labels = label;
+                window.charts.chart1.data.datasets[0].data = y 
                 window.charts.chart1.data.datasets[1].data = s
                 window.charts.chart1.update();
 
@@ -197,6 +199,12 @@
 
                         }
 
+                        if (self.labal1.length > 20){
+                            self.labal1.shift()
+                        }
+
+                        let date = new Date().toLocaleDateString()
+                        self.labal1.push(date)
                         self.tempdata.push(self.payload.internal_temperature)
                         self.pressuredata.push(self.payload.pressure)
                         self.externalTempData.push(self.payload.external_temperature)

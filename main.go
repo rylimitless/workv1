@@ -48,9 +48,19 @@ var (
 	connectionHandler mqtt.OnConnectHandler = func(c mqtt.Client) {
 		fmt.Println("connected")
 	}
+
+	connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
+		fmt.Printf("Connect lost: %v", err)
+		token := client.Connect()
+		if token != nil {
+			token.Wait()
+		}
+
+		Subscribe(client)
+	}
 )
 
-func (s *Sockets) Subscribe(client mqtt.Client) {
+func Subscribe(client mqtt.Client) {
 	token := client.Subscribe("hello/world", 1, nil)
 	token.Wait()
 }
@@ -65,14 +75,15 @@ func main() {
 	ops := mqtt.NewClientOptions()
 	ops.AddBroker("tcp://broker.emqx.io:1883")
 	ops.OnConnect = connectionHandler
+	ops.OnConnectionLost = connectLostHandler
 	ops.SetDefaultPublishHandler(messageHandler)
 
 	client := mqtt.NewClient(ops)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
+		log.Fatal(token)
 	}
 
-	sockets.Subscribe(client)
+	Subscribe(client)
 
 	// client.
 
