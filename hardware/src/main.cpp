@@ -14,23 +14,23 @@
 #define MAX_SLURRY_CM 8
 #define MIN_PH 0
 #define MAX_PH 14
-#define echo 35
+#define echo 2
 #define trig 32
-#define PH_PIN A15
+#define PH_PIN A7
 
 #define TFT_DC 17
 #define TFT_CS 26
 #define TFT_RST 27
 #define TFT_CLK 18
 #define TFT_MOSI 13
-#define TFT_MISO 14
+#define TFT_MISO 12
 
 
 //Definitions
 #define placa "ESP32"
 #define Voltage_Resolution 5
 #define ONE_WIRE_BUS 4
-#define pin A18 //Analog input 4 of your arduino
+#define pin A5 //Analog input 4 of your arduino
 #define type "MQ-8" //MQ4
 #define ADC_Bit_Resolution 12 // For arduino UNO/MEGA/NANO
 #define RatioMQ4CleanAir 4.4  //RS / R0 = 4.4 ppm 
@@ -39,6 +39,9 @@
 // Add to the top section with other function declarations
 void drawParameterBox(int x, int y, const char* label, float value, const char* unit, uint16_t color);
 void display(float, float, float , float , float, float);
+void init_connections();
+String toJson(float,float,float,float,float,float);
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -65,6 +68,8 @@ const char *broker = "broker.emqx.io";
 const int port = 1883;
 
 void setup() {
+
+  init_connections();
   
   Serial.begin(9600);
 
@@ -116,7 +121,7 @@ void loop() {
   float methanePPM = MQ8.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
 
   float external_temperature = bmp.readTemperature();
-  float altitude = bmp.readAltitude(1018.4);
+  float pressure = bmp.readPressure();
 
   int cm = sonar.ping_cm();
   float slurry_level = 100 - ((cm == 0? 1:cm) * 100 / 8.0 );
@@ -129,14 +134,20 @@ void loop() {
   
   float internal_temp = sensors.getTempCByIndex(0);
 
-  display(methanePPM, external_temperature, slurry_level, altitude, ph, internal_temp);
+  const char  *doc = toJson(methanePPM,external_temperature,slurry_level,pressure,ph,internal_temp).c_str();
+
+  bool published = client.publish("biodigester/world",doc);
+  if(published)
+  Serial.println("Published");
+
+  display(methanePPM, external_temperature, slurry_level, pressure, ph, internal_temp);
   
   delay(2000);
 
 
 }
 
-void display(float methanePPM, float external_temperature, float slurry_level, float altitude, float ph, float internal_temp) {
+void display(float methanePPM, float external_temperature, float slurry_level, float pressure, float ph, float internal_temp) {
   // Dark blue background for professional look
   
   // Title bar
@@ -153,13 +164,13 @@ void display(float methanePPM, float external_temperature, float slurry_level, f
   drawParameterBox(10, 160, "pH LEVEL", ph, "", 0x07E0); // Green
   
   // Bottom row with two smaller boxes for altitude and internal temp
-  drawParameterBox(10, 205, "ALTITUDE", altitude, "m", 0xB5B6); // Light purple for altitude
+  drawParameterBox(10, 205, "PRESSURE", pressure / 1000, "kPa", 0xB5B6); // Light purple for altitude
   drawParameterBox(165, 205, "INT TEMP", internal_temp, "C", 0xF81F); // Magenta for internal temp
 }
 
 // Helper function to draw a nice parameter box
 void drawParameterBox(int x, int y, const char* label, float value, const char* unit, uint16_t color) {
-  int width = (strcmp(label, "ALTITUDE") == 0 || strcmp(label, "INT TEMP") == 0) ? 145 : 300;
+  int width = (strcmp(label, "PRESSURE") == 0 || strcmp(label, "INT TEMP") == 0) ? 145 : 300;
   
   // Draw rounded rectangle with border
   tft.fillRoundRect(x, y, width, 40, 5, 0x4228); // Dark gray box
@@ -186,47 +197,49 @@ void drawParameterBox(int x, int y, const char* label, float value, const char* 
   // Draw units
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(1);
-  int unitX = (strcmp(label, "ALTITUDE") == 0 || strcmp(label, "INT TEMP") == 0) ? x+80 : x+100;
+  int unitX = (strcmp(label, "PRESSURE") == 0 || strcmp(label, "INT TEMP") == 0) ? x+80 : x+100;
   tft.setCursor(unitX, y+25);
   tft.print(unit);
 }
-// void init_connections(){
-//   Serial.println("Startinf");
-//   WiFi.begin(ssid,password);
-//   int retryCount = 0;
-//   int print = 0;
-//   while(!WiFi.isConnected() && retryCount < 10){
-//     if(print==0){
-//       tft.setTextSize(2);
-//       print=1;
-//       tft.printf("Connecting to wifi network %s", ssid);
-//     }
-//     Serial.printf("Connecting to wifi network %s\n",ssid);
-//     vTaskDelay(1000 / portTICK_PERIOD_MS); // Use vTaskDelay instead of delay
-//     retryCount++;
-//   }
-//   if(WiFi.isConnected()){
-//     Serial.println("Connected to wifi nework");
-//   }
-//   client.setServer(broker,port);
-  
-//   retryCount = 0;
-//   while(!client.connect("test1") && retryCount < 10){
-//     Serial.println("connecting");
-//     vTaskDelay(1000 / portTICK_PERIOD_MS); 
-//     retryCount++;
-//   }
-// }
 
-// String toJson(float avg_temperature , float humidity, float pressure, float soil_moisture , float aprox_altitude){
-//   JsonDocument doc;
-//   // doc["temperature"] = ceil(avg_temperature * 100.0) / 100.0;
-//   // doc["humidity"] = ceil(humidity * 100.0) /100.0;
-//   // doc["pressure"] = ceil(pressure * 100.0) /100.0 ;
-//   // doc["soil moisture"] = soil_moisture;
-//   // doc["heat index"] = ceil(dht.computeHeatIndex(avg_temperature, humidity,false) * 100.0) / 100.0;
-//   // doc["altitude"] = ceil(aprox_altitude * 100.0) / 100.0;
-//   // String output;
-//   // serializeJson(doc, output);
-//   // return output;
-// }
+void init_connections(){
+  Serial.println("Starting");
+  WiFi.begin(ssid,password);
+  int retryCount = 0;
+  int print = 0;
+  while(!WiFi.isConnected() && retryCount < 10){
+    if(print==0){
+      tft.setTextSize(2);
+      print=1;
+      tft.printf("Connecting to wifi network %s", ssid);
+    }
+    Serial.printf("Connecting to wifi network %s\n",ssid);
+    vTaskDelay(1000 / portTICK_PERIOD_MS); // Use vTaskDelay instead of delay
+    retryCount++;
+  }
+  if(WiFi.isConnected()){
+    Serial.println("Connected to wifi nework");
+  }
+  client.setServer(broker,port);
+  
+  retryCount = 0;
+  while(!client.connect("test1") && retryCount < 10){
+    Serial.println("connecting");
+    vTaskDelay(1000 / portTICK_PERIOD_MS); 
+    retryCount++;
+  }
+}
+
+String toJson(float methanePPM, float external_temperature, float slurry_level, float pressure, float ph, float internal_temp) {
+  JsonDocument doc;
+  doc["methane"] = round(methanePPM * 10) / 10.0;
+  doc["external_temperature"] = round(external_temperature * 10) / 10.0;
+  doc["slurry_level"] = round(slurry_level * 10) / 10.0;
+  doc["pressure"] = round(pressure * 10) / 10.0;
+  doc["ph"] = round(ph * 100) / 100.0;
+  doc["internal_temperature"] = round(internal_temp * 10) / 10.0;
+  
+  String output;
+  serializeJson(doc, output);
+  return output;
+}

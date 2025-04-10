@@ -61,7 +61,7 @@ var (
 )
 
 func Subscribe(client mqtt.Client) {
-	token := client.Subscribe("hello/world", 1, nil)
+	token := client.Subscribe("biodigester/world", 1, nil)
 	token.Wait()
 }
 
@@ -124,7 +124,7 @@ func main() {
 
 	})
 
-	err := http.ListenAndServe(":3000", r)
+	err := http.ListenAndServe(":3333", r)
 	if err != nil {
 		log.Println(err)
 	}
