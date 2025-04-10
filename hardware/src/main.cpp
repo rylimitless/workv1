@@ -117,6 +117,12 @@ void setup() {
 
 void loop() {
 
+  while(WiFi.status() != WL_CONNECTED){
+    Serial.println("WiFi disconnected");
+    init_connections();
+    delay(1000);
+  }
+
   MQ8.update();
   float methanePPM = MQ8.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
 
@@ -218,7 +224,7 @@ void init_connections(){
     retryCount++;
   }
   if(WiFi.isConnected()){
-    Serial.println("Connected to wifi nework");
+    Serial.println("Connected to wifi network");
   }
   client.setServer(broker,port);
   
@@ -235,7 +241,7 @@ String toJson(float methanePPM, float external_temperature, float slurry_level, 
   doc["methane"] = round(methanePPM * 10) / 10.0;
   doc["external_temperature"] = round(external_temperature * 10) / 10.0;
   doc["slurry_level"] = round(slurry_level * 10) / 10.0;
-  doc["pressure"] = round(pressure * 10) / 10.0;
+  doc["pressure"] = round(pressure) / 1000.0;
   doc["ph"] = round(ph * 100) / 100.0;
   doc["internal_temperature"] = round(internal_temp * 10) / 10.0;
   
